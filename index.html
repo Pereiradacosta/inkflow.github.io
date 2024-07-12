@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pintura Aleatória</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: white;
+            cursor: crosshair;
+        }
+        .drop {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.8;
+            transform: scale(1);
+            transition: transform 0.2s, background-color 0.5s;
+        }
+        .trail {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.5;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        document.addEventListener('click', function(event) {
+            createDrop(event.clientX, event.clientY, Math.random() * 50 + 50);
+        });
+
+        function createDrop(x, y, size, color = `hsl(${Math.random() * 360}, 100%, 50%)`) {
+            const drop = document.createElement('div');
+            
+            drop.style.width = `${size}px`;
+            drop.style.height = `${size}px`;
+            drop.style.backgroundColor = color;
+            drop.style.left = `${x - size / 2}px`;
+            drop.style.top = `${y - size / 2}px`;
+            drop.style.transform = `scale(${Math.random() * 0.5 + 0.75})`;
+            drop.classList.add('drop');
+
+            drop.addEventListener('click', function(e) {
+                e.stopPropagation();
+                spreadDrop(drop);
+            });
+
+            document.body.appendChild(drop);
+        }
+
+        function spreadDrop(drop) {
+            const numberOfNewDrops = Math.floor(Math.random() * 5) + 3;
+            const originalRect = drop.getBoundingClientRect();
+
+            for (let i = 0; i < numberOfNewDrops; i++) {
+                const size = Math.random() * 30 + 20;
+                createDrop(
+                    originalRect.left + Math.random() * originalRect.width,
+                    originalRect.top + Math.random() * originalRect.height,
+                    size,
+                    `hsl(${Math.random() * 360}, 100%, 50%)`
+                );
+            }
+
+            // Criar rastro
+            const trail = document.createElement('div');
+            trail.style.width = `${originalRect.width}px`;
+            trail.style.height = `${originalRect.height}px`;
+            trail.style.backgroundColor = drop.style.backgroundColor;
+            trail.style.left = `${originalRect.left}px`;
+            trail.style.top = `${originalRect.top}px`;
+            trail.classList.add('trail');
+            document.body.appendChild(trail);
+
+            // Remover a gota original
+            drop.remove();
+        }
+
+        document.body.addEventListener('click', function(e) {
+            const drops = document.querySelectorAll('.drop');
+            drops.forEach(drop => {
+                const rect = drop.getBoundingClientRect();
+                if (rect.left < e.clientX && rect.left + rect.width > e.clientX &&
+                    rect.top < e.clientY && rect.top + rect.height > e.clientY) {
+                    spreadDrop(drop);
+                }
+            });
+        });
+
+        function blendColors() {
+            return `hsl(${Math.random() * 360}, 100%, 50%)`;
+        }
+    </script>
+</body>
+</html>
