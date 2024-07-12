@@ -14,52 +14,79 @@
             background: white;
             cursor: crosshair;
         }
-        .drop {
+        .shape {
             position: absolute;
-            border-radius: 50%;
             opacity: 0.8;
-            transform: scale(1);
             transition: transform 0.2s, background-color 0.5s;
         }
-        .trail {
-            position: absolute;
+        .circle {
             border-radius: 50%;
-            opacity: 0.5;
+        }
+        .triangle {
+            width: 0;
+            height: 0;
+            border-left: 25px solid transparent;
+            border-right: 25px solid transparent;
+            border-bottom: 50px solid;
+        }
+        .arc {
+            width: 50px;
+            height: 25px;
+            border: 25px solid;
+            border-color: transparent transparent currentColor currentColor;
+            border-radius: 50%;
         }
     </style>
 </head>
 <body>
     <script>
         document.addEventListener('click', function(event) {
-            createDrop(event.clientX, event.clientY, Math.random() * 50 + 50);
+            createShape('circle', event.clientX, event.clientY, Math.random() * 50 + 50);
         });
 
-        function createDrop(x, y, size, color = `hsl(${Math.random() * 360}, 100%, 50%)`) {
-            const drop = document.createElement('div');
-            
-            drop.style.width = `${size}px`;
-            drop.style.height = `${size}px`;
-            drop.style.backgroundColor = color;
-            drop.style.left = `${x - size / 2}px`;
-            drop.style.top = `${y - size / 2}px`;
-            drop.style.transform = `scale(${Math.random() * 0.5 + 0.75})`;
-            drop.classList.add('drop');
+        function createShape(type, x, y, size, color = `hsl(${Math.random() * 360}, 100%, 50%)`) {
+            const shape = document.createElement('div');
+            shape.classList.add('shape', type);
+            shape.style.backgroundColor = color;
+            shape.style.left = `${x - size / 2}px`;
+            shape.style.top = `${y - size / 2}px`;
 
-            drop.addEventListener('click', function(e) {
+            if (type === 'circle') {
+                shape.style.width = `${size}px`;
+                shape.style.height = `${size}px`;
+            } else if (type === 'triangle') {
+                shape.style.borderWidth = `0 ${size / 2}px ${size}px ${size / 2}px`;
+                shape.style.borderBottomColor = color;
+            } else if (type === 'arc') {
+                shape.style.width = `${size}px`;
+                shape.style.height = `${size / 2}px`;
+                shape.style.borderWidth = `${size / 2}px ${size / 2}px 0 0`;
+            }
+
+            shape.addEventListener('click', function(e) {
                 e.stopPropagation();
-                spreadDrop(drop);
+                spreadShape(shape, type);
             });
 
-            document.body.appendChild(drop);
+            document.body.appendChild(shape);
         }
 
-        function spreadDrop(drop) {
-            const numberOfNewDrops = Math.floor(Math.random() * 5) + 3;
-            const originalRect = drop.getBoundingClientRect();
+        function spreadShape(shape, type) {
+            const numberOfNewShapes = Math.floor(Math.random() * 5) + 3;
+            const originalRect = shape.getBoundingClientRect();
 
-            for (let i = 0; i < numberOfNewDrops; i++) {
+            for (let i = 0; i < numberOfNewShapes; i++) {
                 const size = Math.random() * 30 + 20;
-                createDrop(
+                let newType;
+
+                if (type === 'circle') {
+                    newType = 'triangle';
+                } else if (type === 'triangle') {
+                    newType = 'arc';
+                }
+
+                createShape(
+                    newType,
                     originalRect.left + Math.random() * originalRect.width,
                     originalRect.top + Math.random() * originalRect.height,
                     size,
@@ -69,31 +96,28 @@
 
             // Criar rastro
             const trail = document.createElement('div');
-            trail.style.width = `${originalRect.width}px`;
-            trail.style.height = `${originalRect.height}px`;
-            trail.style.backgroundColor = drop.style.backgroundColor;
-            trail.style.left = `${originalRect.left}px`;
-            trail.style.top = `${originalRect.top}px`;
-            trail.classList.add('trail');
+            trail.classList.add('trail', type);
+            trail.style.backgroundColor = shape.style.backgroundColor;
+            trail.style.left = shape.style.left;
+            trail.style.top = shape.style.top;
+
+            if (type === 'circle') {
+                trail.style.width = shape.style.width;
+                trail.style.height = shape.style.height;
+                trail.style.borderRadius = shape.style.borderRadius;
+            } else if (type === 'triangle') {
+                trail.style.borderWidth = shape.style.borderWidth;
+                trail.style.borderBottomColor = shape.style.borderBottomColor;
+            } else if (type === 'arc') {
+                trail.style.width = shape.style.width;
+                trail.style.height = shape.style.height;
+                trail.style.borderWidth = shape.style.borderWidth;
+            }
+
             document.body.appendChild(trail);
 
-            // Remover a gota original
-            drop.remove();
-        }
-
-        document.body.addEventListener('click', function(e) {
-            const drops = document.querySelectorAll('.drop');
-            drops.forEach(drop => {
-                const rect = drop.getBoundingClientRect();
-                if (rect.left < e.clientX && rect.left + rect.width > e.clientX &&
-                    rect.top < e.clientY && rect.top + rect.height > e.clientY) {
-                    spreadDrop(drop);
-                }
-            });
-        });
-
-        function blendColors() {
-            return `hsl(${Math.random() * 360}, 100%, 50%)`;
+            // Remover a forma original
+            shape.remove();
         }
     </script>
 </body>
